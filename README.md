@@ -15,7 +15,7 @@ Now you can install the package **misaem** from CRAN.
 install.packages("misaem")
  ```
 ### Using the misaem package
-Basicly,
+Basically,
 
 1. `miss.saem` contains the procedure of estimation for parameters, as well as their variance, and observed likelihood.
 2. `model_selection` aims at selecting a best model according to BIC.

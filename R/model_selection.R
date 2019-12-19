@@ -5,14 +5,15 @@
 #' @param y Response vector \eqn{N \times 1}{N * 1}
 #' @param seed  An integer as a seed set for the radom generator. The default value is 200.
 #' @return A list with components
-#' \item{subset_choose}{The index of variates included in the best model selected.}
+#' \item{subset_choose}{The index of variables included in the best model selected.}
 #' \item{beta}{Estimated \eqn{\beta}{\beta} for the best model.}
 #' \item{sig2}{Estimated \eqn{\Sigma}{\Sigma} for the best model.}
 #' \item{mu}{Estimated \eqn{\mu}{\mu} for the best model.}
 #' @import mvtnorm stats
+#' @importFrom methods is
 #' @examples
 #' # Generate dataset
-#' N <- 40  # number of subjects
+#' N <- 20  # number of subjects
 #' p <- 3     # number of explanatory variables
 #' mu.star <- rep(0,p)  # mean of the explanatory variables
 #' Sigma.star <- diag(rep(1,p)) # covariance
@@ -39,7 +40,8 @@
 
 model_selection = function(X.obs,y,seed=200){
   #judge
-  if (class(X.obs) == "data.frame") {
+
+  if (is(X.obs, "data.frame")){
     X.obs <- as.matrix(X.obs)
   }
   if (sum(sapply(X.obs, is.numeric)) < ncol(X.obs)) {

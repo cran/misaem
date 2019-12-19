@@ -9,14 +9,14 @@
 #' @param nmcmc The MCMC length. The default is nmcmc = 2.
 #' @param tau Rate \eqn{\tau}{\tau} in the step size \eqn{(k-k_{1})^{-\tau}}{(k-k1)^(-\tau)}. The default is tau = 1.
 #' @param k1 Number of first iterations \eqn{k_{1}}{k1} in the step size \eqn{(k-k_{1})^{-\tau}}{(k-k1)^(-\tau)}. The default is k1=50.
-#' @param seed An integer as a seed set for the radom generator. The default value is 200.
+#' @param seed An integer as a seed set for the random generator. The default value is 200.
 #' @param print_iter If TRUE, miss.saem will print the estimated parameters in each iteration of SAEM.
 #' @param var_cal If TRUE, miss.saem will calculate the variance of estimated parameters.
 #' @param ll_obs_cal If TRUE, miss.saem will calculate the observed log-likelihood.
 #' @return A list with components
 #' \item{mu}{Estimated \eqn{\mu}{\mu}.}
 #' \item{sig2}{Estimated \eqn{\Sigma}{\Sigma}.}
-#' \item{beta}{Estiamated \eqn{\beta}{\beta}.}
+#' \item{beta}{Estimated \eqn{\beta}{\beta}.}
 #' \item{time_run}{Execution time.}
 #' \item{seqbeta}{Sequence of \eqn{\beta}{\beta} estimated in each iteration.}
 #' \item{seqbeta_avg}{Sequence of \eqn{\beta}{\beta} with averaging in each iteration.}
@@ -24,6 +24,7 @@
 #' \item{var_obs}{Estimated variance for estimated parameters.}
 #' \item{std_obs}{Estimated standard error for estimated parameters.}
 #' @import mvtnorm stats
+#' @importFrom methods is
 #' @examples
 #' # Generate dataset
 #' N <- 100  # number of subjects
@@ -53,7 +54,7 @@ miss.saem <- function(X.obs,y,pos_var=1:ncol(X.obs),maxruns=500,tol_em=1e-7,nmcm
   set.seed(seed)
 
   #judge
-  if (class(X.obs) == "data.frame") {
+  if (is(X.obs, "data.frame")){
     X.obs <- as.matrix(X.obs)
   }
   if (sum(sapply(X.obs, is.numeric)) < ncol(X.obs)) {

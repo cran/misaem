@@ -10,6 +10,7 @@
 #' @return
 #' \item{pr.saem}{The prediction result for logistic regression: the probability of response y=1.}
 #' @import mvtnorm stats MASS
+#' @importFrom methods is
 #' @examples
 #' # Generate dataset
 #' N <- 100  # number of subjects
@@ -50,7 +51,7 @@
 pred_saem = function(X.test,beta.saem,mu.saem,sig2.saem,seed=200,method='map'){
 
   #judge
-  if (class(X.test) == "data.frame") {
+  if (is(X.test, "data.frame")){
     X.test <- as.matrix(X.test)
   }
   if (sum(sapply(X.test, is.numeric)) < ncol(X.test)) {

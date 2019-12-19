@@ -1,3 +1,9 @@
+# misaem 0.9.2
+
+A minor release mainly fixing bug:
+
+* Replace `if (class(obj) == "data.frame")  { ..... }` with `if (is(obj, "data.frame"))  { ..... }`. As within the formal S4 class system, a matrix `obj` could well be of a class that extends matrix, such as "matrix" "array" (length = 2).
+
 # misaem 0.9.1
 
 A minor release mainly fixing bugs and typos:
