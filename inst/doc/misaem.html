@@ -1,45 +1,75 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <meta name="author" content="Wei Jiang" />
 
-<meta name="date" content="2019-12-19" />
+<meta name="date" content="2020-07-05" />
 
-<title>Logistic Regression with Missing Covariates</title>
+<title>Linear regression and logistic regression with missing covariates</title>
 
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
 
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css" data-origin="pandoc">
-a.sourceLine { display: inline-block; line-height: 1.25; }
-a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
 @media screen {
 div.sourceCode { overflow: auto; }
 }
 @media print {
-code.sourceCode { white-space: pre-wrap; }
-a.sourceLine { text-indent: -1em; padding-left: 1em; }
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
-pre.numberSource a.sourceLine
-  { position: relative; left: -4em; }
-pre.numberSource a.sourceLine::before
-  { content: attr(data-line-number);
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
     position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all; display: inline-block;
+    border: none; display: inline-block;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -48,9 +78,9 @@ pre.numberSource a.sourceLine::before
   }
 pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
 div.sourceCode
-  {  }
+  {   }
 @media screen {
-a.sourceLine::before { text-decoration: underline; }
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
@@ -96,7 +126,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
       if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
       var style = rule.style.cssText;
       // check if color or background-color is set
-      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
       // replace div.sourceCode by a pre.sourceCode rule
       sheets[i].deleteRule(j);
       sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
@@ -117,9 +147,6 @@ padding-right: 2em;
 font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 font-size: 14px;
 line-height: 1.35;
-}
-#header {
-text-align: center;
 }
 #TOC {
 clear: both;
@@ -288,7 +315,8 @@ code > span.st { color: #d14; }
 code > span.co { color: #888888; font-style: italic; } 
 code > span.ot { color: #007020; } 
 code > span.al { color: #ff0000; font-weight: bold; } 
-code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
 </style>
 
 
@@ -301,24 +329,217 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 
 
-<h1 class="title toc-ignore">Logistic Regression with Missing Covariates</h1>
+<h1 class="title toc-ignore">Linear regression and logistic regression with missing covariates</h1>
 <h4 class="author">Wei Jiang</h4>
-<h4 class="date">2019-12-19</h4>
+<h4 class="date">2020-07-05</h4>
 
 
 
 <div id="introduction-of-misaem" class="section level2">
 <h2>Introduction of misaem</h2>
-<p>misaem is a package to apply statistical inference for logistic regression model with missing data. This methodology is based on likelihood, including:</p>
+<p><code>misaem</code> is a package to perform linear regression and logistic regression with missing data, under MCAR (Missing completely at random) and MAR (Missing at random) mechanisms. The covariates are assumed to be continuous variables. The methodology implemented is based on maximization of the observed likelihood using EM-types of algorithms. The package includes:</p>
 <ol style="list-style-type: decimal">
-<li>A stochastic approximation version of EM algorithm based on Metropolis-Hasting sampling, to estimate the parameters of logistic regression;</li>
-<li>Estimation of parameters’ variance based one Louis formula;</li>
+<li>Parameters estimation:</li>
+</ol>
+<ul>
+<li>for linear regression, we consider a joint Gaussian distribution for covariates and response, then the <code>norm</code> package allows to estimate the mean vector and a variance covariance matrix with the EM algorithm and SWEEP operator. Finally we have reshaped them to obtain the regression coefficient.</li>
+<li>for logistic regression, with a stochastic approximation version of EM algorithm (SAEM) based on Metropolis-Hasting sampling.</li>
+</ul>
+<ol start="2" style="list-style-type: decimal">
+<li>Estimation of standard deviation for estimated parameters:</li>
+</ol>
+<ul>
+<li>for linear regression, use the property that the Gram matrix of random variables (estimates of regression coefficients) approximates their covariance matrix;</li>
+<li>for logistic regression, with Louis formula.</li>
+</ul>
+<ol start="3" style="list-style-type: decimal">
 <li>Model selection procedure based on BIC.</li>
 </ol>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(misaem)</span></code></pre></div>
 </div>
-<div id="synthetic-dataset" class="section level2">
-<h2>Synthetic dataset</h2>
-<p>We first generate a design matrix of size <span class="math inline">\(N=500\)</span> times <span class="math inline">\(p=5\)</span> by drawing each observation from a multivariate normal distribution <span class="math inline">\(\mathcal{N}(\mu, \Sigma)\)</span>. Then, we generate the response according to the logistic regression model.</p>
+<div id="linear-regression" class="section level2">
+<h2>Linear regression</h2>
+<div id="synthetic-dataset" class="section level3">
+<h3>Synthetic dataset</h3>
+<p>Let’s generate a synthetic example of classical linear regression. We first generate a design matrix of size <span class="math inline">\(n = 50\)</span> times <span class="math inline">\(p = 2\)</span> by drawing each observation from a multivariate normal distribution <span class="math inline">\(\mathcal{N}(\mu, \Sigma)\)</span>. We consider as the true values for the parameters: <span class="math display">\[\begin{equation*}
+\begin{split}
+\mu &amp;= (1, 1),\\
+\Sigma &amp; = \begin{bmatrix}
+1 &amp; 1\\
+1 &amp; 4\\
+\end{bmatrix}
+\end{split}
+\end{equation*}\]</span> Then, we generate the response according to the linear regression model with coefficient <span class="math inline">\(\beta = (2, 3, -1)\)</span> and variance of noise vector <span class="math inline">\(\sigma^2 = 0.25\)</span>.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb2-2"><a href="#cb2-2"></a>n &lt;-<span class="st"> </span><span class="dv">50</span> <span class="co"># number of rows</span></span>
+<span id="cb2-3"><a href="#cb2-3"></a>p &lt;-<span class="st"> </span><span class="dv">2</span> <span class="co"># number of explanatory variables</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a></span>
+<span id="cb2-5"><a href="#cb2-5"></a><span class="co"># Generate complete design matrix</span></span>
+<span id="cb2-6"><a href="#cb2-6"></a><span class="kw">library</span>(MASS)</span>
+<span id="cb2-7"><a href="#cb2-7"></a>mu.X &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">1</span>) </span>
+<span id="cb2-8"><a href="#cb2-8"></a>Sigma.X &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">4</span>), <span class="dt">nrow =</span> <span class="dv">2</span>)</span>
+<span id="cb2-9"><a href="#cb2-9"></a>X.complete &lt;-<span class="st"> </span><span class="kw">mvrnorm</span>(n, mu.X, Sigma.X)</span>
+<span id="cb2-10"><a href="#cb2-10"></a></span>
+<span id="cb2-11"><a href="#cb2-11"></a><span class="co"># Generate response</span></span>
+<span id="cb2-12"><a href="#cb2-12"></a>b &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">-1</span>) <span class="co"># regression coefficient</span></span>
+<span id="cb2-13"><a href="#cb2-13"></a>sigma.eps &lt;-<span class="st"> </span><span class="fl">0.25</span> <span class="co"># noise variance</span></span>
+<span id="cb2-14"><a href="#cb2-14"></a>y &lt;-<span class="st"> </span><span class="kw">cbind</span>(<span class="kw">rep</span>(<span class="dv">1</span>, n), X.complete) <span class="op">%*%</span><span class="st"> </span>b <span class="op">+</span><span class="st"> </span><span class="kw">rnorm</span>(n, <span class="dv">0</span>, sigma.eps)</span></code></pre></div>
+<p>Then we randomly introduced 15% of missing values in the covariates according to the MCAR (Missing completely at random) mechanism. To do so, we use the function <code>ampute</code> from the R package <code>mice</code>. For more details about how to generate missing values of different mechanisms, see the resource website of missing values <a href="https://rmisstastic.netlify.app/">Rmisstastic</a>.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">library</span>(mice)</span></code></pre></div>
+<pre><code>## 
+## Attaching package: &#39;mice&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     cbind, rbind</code></pre>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="co"># Add missing values</span></span>
+<span id="cb6-2"><a href="#cb6-2"></a>yX.miss &lt;-<span class="st"> </span><span class="kw">ampute</span>(<span class="kw">data.frame</span>(y, X.complete), <span class="fl">0.15</span>, <span class="dt">patterns =</span> <span class="kw">matrix</span>(</span>
+<span id="cb6-3"><a href="#cb6-3"></a>  <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>), </span>
+<span id="cb6-4"><a href="#cb6-4"></a>  <span class="dt">ncol =</span> <span class="dv">3</span>, <span class="dt">byrow =</span> <span class="ot">TRUE</span>), <span class="dt">freq =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">2</span>, <span class="dv">2</span>) <span class="op">/</span><span class="st"> </span><span class="dv">9</span>, </span>
+<span id="cb6-5"><a href="#cb6-5"></a>  <span class="dt">mech =</span> <span class="st">&quot;MCAR&quot;</span>, <span class="dt">bycases =</span> <span class="ot">FALSE</span>)</span>
+<span id="cb6-6"><a href="#cb6-6"></a>y.obs &lt;-<span class="st"> </span>yX.miss<span class="op">$</span>amp[, <span class="dv">1</span>]              <span class="co"># responses</span></span>
+<span id="cb6-7"><a href="#cb6-7"></a>X.obs &lt;-<span class="st"> </span><span class="kw">as.matrix</span>(yX.miss<span class="op">$</span>amp[, <span class="dv">2</span><span class="op">:</span><span class="dv">3</span>]) <span class="co"># covariates with NAs</span></span></code></pre></div>
+<p>Have a look at our synthetic dataset:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">head</span>(X.obs)</span></code></pre></div>
+<pre><code>##               X1         X2
+## [1,]  0.30528180 -0.1473747
+## [2,]  1.59950261  1.2164969
+## [3,]  0.22508791 -0.5764402
+## [4,]  2.86148303  3.8938533
+## [5,]  0.05283648  2.0009229
+## [6,] -1.07586521 -0.1496864</code></pre>
+<p>Check the percentage of missing values:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="kw">sum</span>(<span class="kw">is.na</span>(X.obs))<span class="op">/</span>(n<span class="op">*</span>p) </span></code></pre></div>
+<pre><code>## [1] 0.17</code></pre>
+</div>
+<div id="estimation-for-linear-regression-with-missing-values" class="section level3">
+<h3>Estimation for linear regression with missing values</h3>
+<p>The main function in our package to fit linear regression with missingness is <code>miss.lm</code> function. The function <code>miss.lm</code> mimics the structure of widely used function <code>lm</code> for the case without missing values. It takes an object of class <code>formula</code> (a symbolic description of the model to be fitted) and the data frame as the input. Here we apply this function with its default options.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="co"># Estimate regression using EM with NA </span></span>
+<span id="cb11-2"><a href="#cb11-2"></a>df.obs =<span class="st"> </span><span class="kw">data.frame</span>(y, X.obs)</span>
+<span id="cb11-3"><a href="#cb11-3"></a>miss.list =<span class="st"> </span><span class="kw">miss.lm</span>(y<span class="op">~</span>., <span class="dt">data =</span> df.obs)</span></code></pre></div>
+<pre><code>## Iterations of EM: 
+## 1...2...3...4...5...6...7...8...9...10...11...12...13...14...15...16...17...</code></pre>
+<p>Then it returns an object of self-defined class <code>miss.lm</code>, which consists of the estimation of parameters, their standard error and observed log-likelihood. We can print or summarize the obtained results as follows:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="kw">print</span>(miss.list)</span></code></pre></div>
+<pre><code>## 
+## Call:  miss.lm(formula = y ~ ., data = df.obs)
+## 
+## Coefficients:
+## (Intercept)           X1           X2  
+##       1.942        3.052       -1.004  
+## Standard error estimates:
+## (Intercept)           X1           X2  
+##     0.04171      0.03484      0.01936  
+## Log-likelihood: 31.85</code></pre>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a><span class="kw">print</span>(<span class="kw">summary</span>(miss.list)) </span></code></pre></div>
+<pre><code>## 
+## Call:
+## miss.lm(formula = y ~ ., data = df.obs)
+## 
+## Coefficients:
+##              Estimate  Std. Error
+## (Intercept)   1.94205   0.04171  
+## X1            3.05205   0.03484  
+## X2           -1.00424   0.01936  
+## Log-likelihood: 31.852</code></pre>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a><span class="kw">summary</span>(miss.list)<span class="op">$</span>coef </span></code></pre></div>
+<pre><code>##              Estimate Std. Error
+## (Intercept)  1.942050 0.04170924
+## X1           3.052050 0.03483511
+## X2          -1.004244 0.01936094</code></pre>
+<p>Self-defined parameters can be also taken such as the maximum number of iterations (<code>maxruns</code>), the convergence tolerance (<code>tol_em</code>) and the logical indicating if the iterations should be reported (<code>print_iter</code>).</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a><span class="co"># Estimate regression using self-defined parameters</span></span>
+<span id="cb19-2"><a href="#cb19-2"></a>miss.list2 =<span class="st"> </span><span class="kw">miss.lm</span>(y<span class="op">~</span>., <span class="dt">data =</span> df.obs, <span class="dt">print_iter =</span> <span class="ot">FALSE</span>, <span class="dt">maxruns =</span> <span class="dv">500</span>, <span class="dt">tol_em =</span> <span class="fl">1e-4</span>)</span>
+<span id="cb19-3"><a href="#cb19-3"></a><span class="kw">print</span>(miss.list2)</span></code></pre></div>
+<pre><code>## 
+## Call:  miss.lm(formula = y ~ ., data = df.obs, print_iter = FALSE, maxruns = 500, 
+##     tol_em = 1e-04)
+## 
+## Coefficients:
+## (Intercept)           X1           X2  
+##       1.942        3.052       -1.004  
+## Standard error estimates:
+## (Intercept)           X1           X2  
+##     0.04175      0.03487      0.01938  
+## Log-likelihood: 31.85</code></pre>
+</div>
+<div id="model-selection" class="section level3">
+<h3>Model selection</h3>
+<p>The function <code>miss.lm.model.select</code> adapts a BIC criterion and step-wise method to return the best model selected. We add a null variable with missing values to check if the function can distinguish it from the true variables.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a><span class="co"># Add null variable with NA</span></span>
+<span id="cb21-2"><a href="#cb21-2"></a>X.null &lt;-<span class="st"> </span><span class="kw">mvrnorm</span>(n, <span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb21-3"><a href="#cb21-3"></a>patterns &lt;-<span class="st"> </span><span class="kw">runif</span>(n)<span class="op">&lt;</span><span class="fl">0.15</span> <span class="co"># missing completely at random</span></span>
+<span id="cb21-4"><a href="#cb21-4"></a>X.null[patterns] &lt;-<span class="st"> </span><span class="ot">NA</span></span>
+<span id="cb21-5"><a href="#cb21-5"></a>X.obs.null &lt;-<span class="st"> </span><span class="kw">cbind.data.frame</span>(X.obs, X.null)</span>
+<span id="cb21-6"><a href="#cb21-6"></a></span>
+<span id="cb21-7"><a href="#cb21-7"></a><span class="co"># Without model selection</span></span>
+<span id="cb21-8"><a href="#cb21-8"></a>df.obs.null =<span class="st"> </span><span class="kw">data.frame</span>(y, X.obs.null)</span>
+<span id="cb21-9"><a href="#cb21-9"></a>miss.list.null =<span class="st"> </span><span class="kw">miss.lm</span>(y<span class="op">~</span>., <span class="dt">data =</span> df.obs.null)</span></code></pre></div>
+<pre><code>## Iterations of EM: 
+## 1...2...3...4...5...6...7...8...9...10...11...12...13...14...15...</code></pre>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a><span class="kw">print</span>(miss.list.null)</span></code></pre></div>
+<pre><code>## 
+## Call:  miss.lm(formula = y ~ ., data = df.obs.null)
+## 
+## Coefficients:
+## (Intercept)           X1           X2       X.null  
+##     1.88617      3.05883     -1.00391      0.04435  
+## Standard error estimates:
+## (Intercept)           X1           X2       X.null  
+##     0.05670      0.03438      0.02125      0.02853  
+## Log-likelihood: 15.87</code></pre>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1"></a><span class="co"># Model selection</span></span>
+<span id="cb25-2"><a href="#cb25-2"></a>miss.model =<span class="st"> </span><span class="kw">miss.lm.model.select</span>(y, X.obs.null)</span>
+<span id="cb25-3"><a href="#cb25-3"></a><span class="kw">print</span>(miss.model)</span></code></pre></div>
+<pre><code>## 
+## Call:  miss.lm(formula = Y ~ ., data = df, print_iter = FALSE)
+## 
+## Coefficients:
+## (Intercept)           X1           X2  
+##       1.942        3.052       -1.004  
+## Standard error estimates:
+## (Intercept)           X1           X2  
+##     0.04171      0.03484      0.01936  
+## Log-likelihood: 31.85</code></pre>
+</div>
+<div id="prediction-on-test-set" class="section level3">
+<h3>Prediction on test set</h3>
+<p>In order to evaluate the prediction performance, we generate a test set of size <span class="math inline">\(nt = 20\)</span> times <span class="math inline">\(p = 2\)</span> following the same distribution as the previous design matrix, and we add or not 15% of missing values.</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1"></a><span class="co"># Prediction</span></span>
+<span id="cb27-2"><a href="#cb27-2"></a><span class="co"># Generate dataset</span></span>
+<span id="cb27-3"><a href="#cb27-3"></a><span class="kw">set.seed</span>(<span class="dv">200</span>)</span>
+<span id="cb27-4"><a href="#cb27-4"></a>nt &lt;-<span class="st"> </span><span class="dv">20</span>  <span class="co"># number of new observations</span></span>
+<span id="cb27-5"><a href="#cb27-5"></a>Xt &lt;-<span class="st"> </span><span class="kw">mvrnorm</span>(nt, mu.X, Sigma.X)</span>
+<span id="cb27-6"><a href="#cb27-6"></a></span>
+<span id="cb27-7"><a href="#cb27-7"></a><span class="co"># Add missing values</span></span>
+<span id="cb27-8"><a href="#cb27-8"></a>Xt.miss &lt;-<span class="st"> </span><span class="kw">ampute</span>(<span class="kw">data.frame</span>(Xt), <span class="fl">0.15</span>, <span class="dt">patterns =</span> <span class="kw">matrix</span>(</span>
+<span id="cb27-9"><a href="#cb27-9"></a>  <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>), </span>
+<span id="cb27-10"><a href="#cb27-10"></a>  <span class="dt">ncol =</span> <span class="dv">2</span>, <span class="dt">byrow =</span> <span class="ot">TRUE</span>), <span class="dt">freq =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">1</span>) <span class="op">/</span><span class="dv">2</span>, </span>
+<span id="cb27-11"><a href="#cb27-11"></a>  <span class="dt">mech =</span> <span class="st">&quot;MCAR&quot;</span>, <span class="dt">bycases =</span> <span class="ot">FALSE</span>)</span>
+<span id="cb27-12"><a href="#cb27-12"></a>Xt.obs &lt;-<span class="st"> </span><span class="kw">as.matrix</span>(Xt.miss<span class="op">$</span>amp) <span class="co"># covariates with NAs</span></span></code></pre></div>
+<p>The prediction can be performed for a complete test set:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1"></a><span class="co">#train with NA + test no NA</span></span>
+<span id="cb28-2"><a href="#cb28-2"></a>miss.comptest.pred =<span class="st"> </span><span class="kw">predict</span>(miss.list2, <span class="kw">data.frame</span>(Xt), <span class="dt">seed =</span> <span class="dv">100</span>)</span>
+<span id="cb28-3"><a href="#cb28-3"></a><span class="kw">print</span>(miss.comptest.pred)</span></code></pre></div>
+<pre><code>##  [1]  3.3878210  2.6112345 -0.5562864  6.5926842  2.9231974  8.0234969
+##  [7]  0.8286503  3.9363413  6.7515266  3.3517064  6.8156632  2.2406832
+## [13]  2.0321507  5.9852215  7.8101528  5.0863422  4.2238612  4.4541193
+## [19]  3.5522691  3.0003519</code></pre>
+<p>And we can also apply the function when both train set and test set have missing values:</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1"></a><span class="co">#both train &amp; test with NA</span></span>
+<span id="cb30-2"><a href="#cb30-2"></a>miss.pred =<span class="st"> </span><span class="kw">predict</span>(miss.list2, <span class="kw">data.frame</span>(Xt.obs), <span class="dt">seed =</span> <span class="dv">100</span>)</span>
+<span id="cb30-3"><a href="#cb30-3"></a><span class="kw">print</span>(miss.pred)</span></code></pre></div>
+<pre><code>##  [1]  3.3878210  3.4804264 -0.5562864  6.5926842  2.9231974  8.0234969
+##  [7]  0.1435715  3.9363413  6.7515266  3.3517064  6.8156632  2.2406832
+## [13]  2.0321507  5.9150631  7.8101528  3.5570286  4.2238612  4.4541193
+## [19]  3.5522691  3.0003519</code></pre>
+</div>
+</div>
+<div id="logistic-regression" class="section level2">
+<h2>Logistic regression</h2>
+<div id="synthetic-dataset-1" class="section level3">
+<h3>Synthetic dataset</h3>
+<p>We first generate a design matrix of size <span class="math inline">\(n=500\)</span> times <span class="math inline">\(p=5\)</span> by drawing each observation from a multivariate normal distribution <span class="math inline">\(\mathcal{N}(\mu, \Sigma)\)</span>. Then, we generate the response according to the logistic regression model.</p>
 <p>We consider as the true values for the parameters <span class="math display">\[\begin{equation*}
 \begin{split}
 \beta &amp;= (0, 1, -1, 1, 0, -1),\\
@@ -333,39 +554,39 @@ and <span class="math inline">\(C\)</span> the correlation matrix <span class="m
 0 &amp; 0 &amp; 0.3 &amp; 1 &amp;  0.7\\
 0 &amp; 0 &amp; 0.6 &amp; 0.7 &amp;  1\\
 \end{bmatrix}.\]</span></p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="co"># Generate dataset</span></a>
-<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">set.seed</span>(<span class="dv">200</span>)</a>
-<a class="sourceLine" id="cb1-3" data-line-number="3">N &lt;-<span class="st"> </span><span class="dv">500</span>  <span class="co"># number of subjects</span></a>
-<a class="sourceLine" id="cb1-4" data-line-number="4">p &lt;-<span class="st"> </span><span class="dv">5</span>     <span class="co"># number of explanatory variables</span></a>
-<a class="sourceLine" id="cb1-5" data-line-number="5">mu.star &lt;-<span class="st"> </span><span class="dv">1</span><span class="op">:</span>p  <span class="co">#rep(0,p)  # mean of the explanatory variables</span></a>
-<a class="sourceLine" id="cb1-6" data-line-number="6">sd &lt;-<span class="st"> </span><span class="dv">1</span><span class="op">:</span>p <span class="co"># rep(1,p) # standard deviations</span></a>
-<a class="sourceLine" id="cb1-7" data-line-number="7">C &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">c</span>(   <span class="co"># correlation matrix</span></a>
-<a class="sourceLine" id="cb1-8" data-line-number="8"><span class="dv">1</span>,   <span class="fl">0.8</span>, <span class="dv">0</span>,   <span class="dv">0</span>,   <span class="dv">0</span>,</a>
-<a class="sourceLine" id="cb1-9" data-line-number="9"><span class="fl">0.8</span>, <span class="dv">1</span>,   <span class="dv">0</span>,   <span class="dv">0</span>,   <span class="dv">0</span>,</a>
-<a class="sourceLine" id="cb1-10" data-line-number="10"><span class="dv">0</span>,   <span class="dv">0</span>,   <span class="dv">1</span>,   <span class="fl">0.3</span>, <span class="fl">0.6</span>,</a>
-<a class="sourceLine" id="cb1-11" data-line-number="11"><span class="dv">0</span>,   <span class="dv">0</span>,   <span class="fl">0.3</span>, <span class="dv">1</span>,   <span class="fl">0.7</span>,</a>
-<a class="sourceLine" id="cb1-12" data-line-number="12"><span class="dv">0</span>,   <span class="dv">0</span>,   <span class="fl">0.6</span>, <span class="fl">0.7</span>, <span class="dv">1</span>), <span class="dt">nrow=</span>p)</a>
-<a class="sourceLine" id="cb1-13" data-line-number="13">Sigma.star &lt;-<span class="st"> </span><span class="kw">diag</span>(sd)<span class="op">%*%</span>C<span class="op">%*%</span><span class="kw">diag</span>(sd) <span class="co"># covariance matrix</span></a>
-<a class="sourceLine" id="cb1-14" data-line-number="14">beta.star &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">-1</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">-1</span>) <span class="co"># coefficients</span></a>
-<a class="sourceLine" id="cb1-15" data-line-number="15">beta0.star &lt;-<span class="st"> </span><span class="dv">0</span>  <span class="co"># intercept</span></a>
-<a class="sourceLine" id="cb1-16" data-line-number="16">beta.true =<span class="st"> </span><span class="kw">c</span>(beta0.star,beta.star)</a>
-<a class="sourceLine" id="cb1-17" data-line-number="17"></a>
-<a class="sourceLine" id="cb1-18" data-line-number="18"><span class="co"># Design matrix</span></a>
-<a class="sourceLine" id="cb1-19" data-line-number="19">X.complete &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">rnorm</span>(N<span class="op">*</span>p), <span class="dt">nrow=</span>N)<span class="op">%*%</span><span class="kw">chol</span>(Sigma.star)<span class="op">+</span></a>
-<a class="sourceLine" id="cb1-20" data-line-number="20"><span class="st">              </span><span class="kw">matrix</span>(<span class="kw">rep</span>(mu.star,N), <span class="dt">nrow=</span>N, <span class="dt">byrow =</span> <span class="ot">TRUE</span>)</a>
-<a class="sourceLine" id="cb1-21" data-line-number="21"></a>
-<a class="sourceLine" id="cb1-22" data-line-number="22"><span class="co"># Reponse vector</span></a>
-<a class="sourceLine" id="cb1-23" data-line-number="23">p1 &lt;-<span class="st"> </span><span class="dv">1</span><span class="op">/</span>(<span class="dv">1</span><span class="op">+</span><span class="kw">exp</span>(<span class="op">-</span>X.complete<span class="op">%*%</span>beta.star<span class="op">-</span>beta0.star))</a>
-<a class="sourceLine" id="cb1-24" data-line-number="24">y &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">runif</span>(N)<span class="op">&lt;</span>p1)</a></code></pre></div>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1"></a><span class="co"># Generate dataset</span></span>
+<span id="cb32-2"><a href="#cb32-2"></a><span class="kw">set.seed</span>(<span class="dv">200</span>)</span>
+<span id="cb32-3"><a href="#cb32-3"></a>n &lt;-<span class="st"> </span><span class="dv">500</span>  <span class="co"># number of subjects</span></span>
+<span id="cb32-4"><a href="#cb32-4"></a>p &lt;-<span class="st"> </span><span class="dv">5</span>     <span class="co"># number of explanatory variables</span></span>
+<span id="cb32-5"><a href="#cb32-5"></a>mu.star &lt;-<span class="st"> </span><span class="dv">1</span><span class="op">:</span>p  <span class="co">#rep(0,p)  # mean of the explanatory variables</span></span>
+<span id="cb32-6"><a href="#cb32-6"></a>sd &lt;-<span class="st"> </span><span class="dv">1</span><span class="op">:</span>p <span class="co"># rep(1,p) # standard deviations</span></span>
+<span id="cb32-7"><a href="#cb32-7"></a>C &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">c</span>(   <span class="co"># correlation matrix</span></span>
+<span id="cb32-8"><a href="#cb32-8"></a><span class="dv">1</span>,   <span class="fl">0.8</span>, <span class="dv">0</span>,   <span class="dv">0</span>,   <span class="dv">0</span>,</span>
+<span id="cb32-9"><a href="#cb32-9"></a><span class="fl">0.8</span>, <span class="dv">1</span>,   <span class="dv">0</span>,   <span class="dv">0</span>,   <span class="dv">0</span>,</span>
+<span id="cb32-10"><a href="#cb32-10"></a><span class="dv">0</span>,   <span class="dv">0</span>,   <span class="dv">1</span>,   <span class="fl">0.3</span>, <span class="fl">0.6</span>,</span>
+<span id="cb32-11"><a href="#cb32-11"></a><span class="dv">0</span>,   <span class="dv">0</span>,   <span class="fl">0.3</span>, <span class="dv">1</span>,   <span class="fl">0.7</span>,</span>
+<span id="cb32-12"><a href="#cb32-12"></a><span class="dv">0</span>,   <span class="dv">0</span>,   <span class="fl">0.6</span>, <span class="fl">0.7</span>, <span class="dv">1</span>), <span class="dt">nrow=</span>p)</span>
+<span id="cb32-13"><a href="#cb32-13"></a>Sigma.star &lt;-<span class="st"> </span><span class="kw">diag</span>(sd)<span class="op">%*%</span>C<span class="op">%*%</span><span class="kw">diag</span>(sd) <span class="co"># covariance matrix</span></span>
+<span id="cb32-14"><a href="#cb32-14"></a>beta.star &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">-1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">-1</span>) <span class="co"># coefficients</span></span>
+<span id="cb32-15"><a href="#cb32-15"></a>beta0.star &lt;-<span class="st"> </span><span class="dv">0</span>  <span class="co"># intercept</span></span>
+<span id="cb32-16"><a href="#cb32-16"></a>beta.true =<span class="st"> </span><span class="kw">c</span>(beta0.star,beta.star)</span>
+<span id="cb32-17"><a href="#cb32-17"></a></span>
+<span id="cb32-18"><a href="#cb32-18"></a><span class="co"># Design matrix</span></span>
+<span id="cb32-19"><a href="#cb32-19"></a>X.complete &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">rnorm</span>(n<span class="op">*</span>p), <span class="dt">nrow=</span>n)<span class="op">%*%</span><span class="kw">chol</span>(Sigma.star)<span class="op">+</span></span>
+<span id="cb32-20"><a href="#cb32-20"></a><span class="st">              </span><span class="kw">matrix</span>(<span class="kw">rep</span>(mu.star,n), <span class="dt">nrow=</span>n, <span class="dt">byrow =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb32-21"><a href="#cb32-21"></a></span>
+<span id="cb32-22"><a href="#cb32-22"></a><span class="co"># Reponse vector</span></span>
+<span id="cb32-23"><a href="#cb32-23"></a>p1 &lt;-<span class="st"> </span><span class="dv">1</span><span class="op">/</span>(<span class="dv">1</span><span class="op">+</span><span class="kw">exp</span>(<span class="op">-</span>X.complete<span class="op">%*%</span>beta.star<span class="op">-</span>beta0.star))</span>
+<span id="cb32-24"><a href="#cb32-24"></a>y &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">runif</span>(n)<span class="op">&lt;</span>p1)</span></code></pre></div>
 <p>Then we randomly introduced 10% of missing values in the covariates according to the MCAR (Missing completely at random) mechanism.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="co"># Generate missingness</span></a>
-<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="kw">set.seed</span>(<span class="dv">200</span>)</a>
-<a class="sourceLine" id="cb2-3" data-line-number="3">p.miss &lt;-<span class="st"> </span><span class="fl">0.10</span></a>
-<a class="sourceLine" id="cb2-4" data-line-number="4">patterns &lt;-<span class="st"> </span><span class="kw">runif</span>(N<span class="op">*</span>p)<span class="op">&lt;</span>p.miss <span class="co"># missing completely at random</span></a>
-<a class="sourceLine" id="cb2-5" data-line-number="5">X.obs &lt;-<span class="st"> </span>X.complete</a>
-<a class="sourceLine" id="cb2-6" data-line-number="6">X.obs[patterns] &lt;-<span class="st"> </span><span class="ot">NA</span></a></code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1"></a><span class="co"># Generate missingness</span></span>
+<span id="cb33-2"><a href="#cb33-2"></a><span class="kw">set.seed</span>(<span class="dv">200</span>)</span>
+<span id="cb33-3"><a href="#cb33-3"></a>p.miss &lt;-<span class="st"> </span><span class="fl">0.10</span></span>
+<span id="cb33-4"><a href="#cb33-4"></a>patterns &lt;-<span class="st"> </span><span class="kw">runif</span>(n<span class="op">*</span>p)<span class="op">&lt;</span>p.miss <span class="co"># missing completely at random</span></span>
+<span id="cb33-5"><a href="#cb33-5"></a>X.obs &lt;-<span class="st"> </span>X.complete</span>
+<span id="cb33-6"><a href="#cb33-6"></a>X.obs[patterns] &lt;-<span class="st"> </span><span class="ot">NA</span></span></code></pre></div>
 <p>Have a look at our synthetic dataset:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="kw">head</span>(X.obs)</a></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1"></a><span class="kw">head</span>(X.obs)</span></code></pre></div>
 <pre><code>##           [,1]        [,2]      [,3]         [,4]        [,5]
 ## [1,] 1.0847563  1.71119812 5.0779956  9.731254821 13.02285225
 ## [2,] 1.2264603  0.04664033 5.3758000  6.383093558  4.84730504
@@ -374,191 +595,129 @@ and <span class="math inline">\(C\)</span> the correlation matrix <span class="m
 ## [5,] 1.0597553 -0.38470918 0.4462986  0.008402997  0.04745022
 ## [6,] 0.8853591  0.56839374 3.4641522  7.047389616          NA</code></pre>
 </div>
-<div id="main-usage-estimation-for-logistic-regression-with-missingness" class="section level2">
-<h2>Main usage: Estimation for logistic regression with missingness</h2>
-<p>The main function in our package is <code>miss.saem</code> function, which returns the estimation of parameters for logistic regression with missingness. Here we apply this function with its default options.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="co">#Charge library</span></a>
-<a class="sourceLine" id="cb5-2" data-line-number="2"><span class="kw">library</span>(misaem)</a>
-<a class="sourceLine" id="cb5-3" data-line-number="3"></a>
-<a class="sourceLine" id="cb5-4" data-line-number="4"><span class="co"># SAEM</span></a>
-<a class="sourceLine" id="cb5-5" data-line-number="5">list.saem =<span class="st"> </span><span class="kw">miss.saem</span>(X.obs,y)</a></code></pre></div>
-<pre><code>## iteration = 10 beta = 0.07193013 0.8621059 -0.9593602 1.188501 -0.00691982 -1.115174 
-## Distance from last iteration = 0.002800532 
-## iteration = 20 beta = -0.03136551 1.256794 -1.12295 1.180936 -0.009885152 -1.114326 
-## Distance from last iteration = 0.0176632 
-## iteration = 30 beta = 0.02075442 1.16449 -1.021039 1.162069 -0.01682317 -1.099308 
-## Distance from last iteration = 0.1218524 
-## iteration = 40 beta = 0.1477152 1.073935 -1.095803 1.173065 -0.02928672 -1.099446 
-## Distance from last iteration = 0.1414668 
-## iteration = 50 beta = 0.1205986 1.113298 -0.9688564 1.041548 -0.06052164 -0.9799622 
-## Distance from last iteration = 0.1737565 
-## iteration = 60 beta = 0.1129732 1.013455 -0.9389359 1.027017 -0.05479268 -0.9524152 
-## Distance from last iteration = 3.076897e-05 
-## iteration = 70 beta = 0.07847484 1.023609 -0.9626167 1.038256 -0.04132143 -0.9646895 
-## Distance from last iteration = 0.0002820075 
-## iteration = 80 beta = 0.07095625 1.070815 -0.9922385 1.053396 -0.04173298 -0.980045 
-## Distance from last iteration = 5.67119e-05 
-## iteration = 90 beta = 0.07070879 1.089326 -1.010678 1.072014 -0.03172497 -1.007943 
-## Distance from last iteration = 7.494584e-05 
-## iteration = 100 beta = 0.06932229 1.107081 -1.022656 1.081968 -0.03006122 -1.017227 
-## Distance from last iteration = 1.828823e-05 
-## iteration = 110 beta = 0.06329327 1.116114 -1.028553 1.089239 -0.0295718 -1.025201 
-## Distance from last iteration = 1.094912e-06 
-## iteration = 120 beta = 0.06704591 1.124846 -1.035163 1.090537 -0.02853558 -1.026653 
-## Distance from last iteration = 1.048773e-05 
-## iteration = 130 beta = 0.06694411 1.125318 -1.033447 1.086222 -0.02904691 -1.024076 
-## Distance from last iteration = 1.398283e-05 
-## iteration = 140 beta = 0.06392523 1.117632 -1.02875 1.085534 -0.02812343 -1.024316 
-## Distance from last iteration = 2.058142e-05 
-## iteration = 150 beta = 0.05796131 1.11061 -1.026311 1.085827 -0.02504412 -1.025536 
-## Distance from last iteration = 1.077455e-05 
-## iteration = 160 beta = 0.06594651 1.109383 -1.027915 1.085974 -0.0271385 -1.024832 
-## Distance from last iteration = 2.593489e-06 
-## iteration = 170 beta = 0.07014832 1.114645 -1.031966 1.086403 -0.02695946 -1.025621 
-## Distance from last iteration = 5.779123e-06 
-## iteration = 180 beta = 0.0696883 1.118459 -1.033234 1.085297 -0.02696528 -1.02516 
-## Distance from last iteration = 4.383226e-06 
-## iteration = 190 beta = 0.06977064 1.120923 -1.035369 1.086957 -0.02654733 -1.02698 
-## Distance from last iteration = 2.213467e-06 
-## iteration = 200 beta = 0.07263775 1.126912 -1.039287 1.087265 -0.02704987 -1.027656 
-## Distance from last iteration = 7.281153e-07</code></pre>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="kw">print</span>(list.saem<span class="op">$</span>beta)</a></code></pre></div>
-<pre><code>## [1]  0.07295149  1.12523513 -1.03819294  1.08639345 -0.02713150 -1.02667062</code></pre>
-<p>And if you need to obtain the variance of estimation:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="co"># SAEM with variance estimation</span></a>
-<a class="sourceLine" id="cb9-2" data-line-number="2">list.saem =<span class="st"> </span><span class="kw">miss.saem</span>(X.obs,y,<span class="dt">var_cal =</span> <span class="ot">TRUE</span>)</a></code></pre></div>
-<pre><code>## iteration = 10 beta = 0.07193013 0.8621059 -0.9593602 1.188501 -0.00691982 -1.115174 
-## Distance from last iteration = 0.002800532 
-## iteration = 20 beta = -0.03136551 1.256794 -1.12295 1.180936 -0.009885152 -1.114326 
-## Distance from last iteration = 0.0176632 
-## iteration = 30 beta = 0.02075442 1.16449 -1.021039 1.162069 -0.01682317 -1.099308 
-## Distance from last iteration = 0.1218524 
-## iteration = 40 beta = 0.1477152 1.073935 -1.095803 1.173065 -0.02928672 -1.099446 
-## Distance from last iteration = 0.1414668 
-## iteration = 50 beta = 0.1205986 1.113298 -0.9688564 1.041548 -0.06052164 -0.9799622 
-## Distance from last iteration = 0.1737565 
-## iteration = 60 beta = 0.1129732 1.013455 -0.9389359 1.027017 -0.05479268 -0.9524152 
-## Distance from last iteration = 3.076897e-05 
-## iteration = 70 beta = 0.07847484 1.023609 -0.9626167 1.038256 -0.04132143 -0.9646895 
-## Distance from last iteration = 0.0002820075 
-## iteration = 80 beta = 0.07095625 1.070815 -0.9922385 1.053396 -0.04173298 -0.980045 
-## Distance from last iteration = 5.67119e-05 
-## iteration = 90 beta = 0.07070879 1.089326 -1.010678 1.072014 -0.03172497 -1.007943 
-## Distance from last iteration = 7.494584e-05 
-## iteration = 100 beta = 0.06932229 1.107081 -1.022656 1.081968 -0.03006122 -1.017227 
-## Distance from last iteration = 1.828823e-05 
-## iteration = 110 beta = 0.06329327 1.116114 -1.028553 1.089239 -0.0295718 -1.025201 
-## Distance from last iteration = 1.094912e-06 
-## iteration = 120 beta = 0.06704591 1.124846 -1.035163 1.090537 -0.02853558 -1.026653 
-## Distance from last iteration = 1.048773e-05 
-## iteration = 130 beta = 0.06694411 1.125318 -1.033447 1.086222 -0.02904691 -1.024076 
-## Distance from last iteration = 1.398283e-05 
-## iteration = 140 beta = 0.06392523 1.117632 -1.02875 1.085534 -0.02812343 -1.024316 
-## Distance from last iteration = 2.058142e-05 
-## iteration = 150 beta = 0.05796131 1.11061 -1.026311 1.085827 -0.02504412 -1.025536 
-## Distance from last iteration = 1.077455e-05 
-## iteration = 160 beta = 0.06594651 1.109383 -1.027915 1.085974 -0.0271385 -1.024832 
-## Distance from last iteration = 2.593489e-06 
-## iteration = 170 beta = 0.07014832 1.114645 -1.031966 1.086403 -0.02695946 -1.025621 
-## Distance from last iteration = 5.779123e-06 
-## iteration = 180 beta = 0.0696883 1.118459 -1.033234 1.085297 -0.02696528 -1.02516 
-## Distance from last iteration = 4.383226e-06 
-## iteration = 190 beta = 0.06977064 1.120923 -1.035369 1.086957 -0.02654733 -1.02698 
-## Distance from last iteration = 2.213467e-06 
-## iteration = 200 beta = 0.07263775 1.126912 -1.039287 1.087265 -0.02704987 -1.027656 
-## Distance from last iteration = 7.281153e-07</code></pre>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="kw">print</span>(list.saem<span class="op">$</span>beta)</a></code></pre></div>
-<pre><code>## [1]  0.07295149  1.12523513 -1.03819294  1.08639345 -0.02713150 -1.02667062</code></pre>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1"><span class="kw">print</span>(list.saem<span class="op">$</span>var_obs)</a></code></pre></div>
-<pre><code>##               [,1]        [,2]          [,3]         [,4]          [,5]
-## [1,]  0.1045912507 -0.01640825 -8.015102e-03 -0.007844460 -6.446553e-03
-## [2,] -0.0164082517  0.14023540 -6.540748e-02  0.011371833 -1.119750e-03
-## [3,] -0.0080151020 -0.06540748  4.229590e-02 -0.012590862  8.142047e-05
-## [4,] -0.0078444600  0.01137183 -1.259086e-02  0.020041181  2.209681e-03
-## [5,] -0.0064465534 -0.00111975  8.142047e-05  0.002209681  4.480773e-03
-## [6,]  0.0005674298 -0.01229699  1.228287e-02 -0.017117600 -4.048477e-03
-##               [,6]
-## [1,]  0.0005674298
-## [2,] -0.0122969901
-## [3,]  0.0122828659
-## [4,] -0.0171176002
-## [5,] -0.0040484767
-## [6,]  0.0185079131</code></pre>
+<div id="estimation-for-logistic-regression-with-missingness" class="section level3">
+<h3>Estimation for logistic regression with missingness</h3>
+<p>The main function for fitting logistic regression with missing covariates in our package is <code>miss.glm</code> function, which mimics the structure of widely used function <code>glm</code>. Note that we don’t need to specify the binomial family in the input of <code>miss.glm</code> function. Here we apply this function with its default options, and then we can print or summarize the obtained results as follows:</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1"></a>df.obs =<span class="st"> </span><span class="kw">data.frame</span>(y, X.obs)</span>
+<span id="cb36-2"><a href="#cb36-2"></a></span>
+<span id="cb36-3"><a href="#cb36-3"></a><span class="co">#logistic regression with NA </span></span>
+<span id="cb36-4"><a href="#cb36-4"></a>miss.list =<span class="st"> </span><span class="kw">miss.glm</span>(y<span class="op">~</span>., <span class="dt">data =</span> df.obs, <span class="dt">seed =</span> <span class="dv">100</span>)</span></code></pre></div>
+<pre><code>## Iteration of SAEM: 
+## 50 100 150 200</code></pre>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1"></a><span class="kw">print</span>(miss.list)</span></code></pre></div>
+<pre><code>## 
+## Call:  miss.glm(formula = y ~ ., data = df.obs, seed = 100)
+## 
+## Coefficients:
+## (Intercept)           X1           X2           X3           X4           X5  
+##    -0.03659      1.50705     -1.28208      1.12342      1.03435     -1.07691  
+## Standard error estimates:
+## (Intercept)           X1           X2           X3           X4           X5  
+##      0.3210       0.3446       0.2056       0.1408       0.1240       0.1284  
+## Log-likelihood: -171.7</code></pre>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1"></a><span class="kw">print</span>(<span class="kw">summary</span>(miss.list)) </span></code></pre></div>
+<pre><code>## 
+## Call:
+## miss.glm(formula = y ~ ., data = df.obs, seed = 100)
+## 
+## Coefficients:
+##              Estimate  Std. Error
+## (Intercept)  -0.03659   0.32104  
+## X1            1.50705   0.34456  
+## X2           -1.28208   0.20560  
+## X3            1.12342   0.14076  
+## X4            1.03435   0.12396  
+## X5           -1.07691   0.12843  
+## Log-likelihood: -171.74</code></pre>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1"></a><span class="kw">summary</span>(miss.list)<span class="op">$</span>coef </span></code></pre></div>
+<pre><code>##                Estimate Std. Error
+## (Intercept) -0.03659218  0.3210369
+## X1           1.50704588  0.3445570
+## X2          -1.28208040  0.2056000
+## X3           1.12341764  0.1407630
+## X4           1.03435057  0.1239566
+## X5          -1.07690679  0.1284274</code></pre>
 </div>
-<div id="model-selection-with-missing-values" class="section level2">
-<h2>Model selection with missing values</h2>
-<p>To perform model selection with missing values, we adapt criterion BIC and step-wise method. The function <code>model_selection</code> will return the index of variables included in the best model selected, and also the estimates for the best model. Pay attention that here the dimension of dataset should be less than 20 to avoid blocking your computer.</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" data-line-number="1"><span class="co"># model selection for SAEM</span></a>
-<a class="sourceLine" id="cb15-2" data-line-number="2">list.saem.select =<span class="st"> </span><span class="kw">model_selection</span>(X.obs,y)</a></code></pre></div>
-<pre><code>## iteration = 10 beta = 0.03693459 0.9922979 -0.9512952 1.089339 0 -1.028696 
-## Distance from last iteration = 0.0005214435 
-## iteration = 20 beta = 0.02679083 1.016159 -0.9809538 1.108529 0 -1.053341 
-## Distance from last iteration = 0.0001119514 
-## iteration = 30 beta = 0.00634951 1.026026 -0.9844437 1.112693 0 -1.056097 
-## Distance from last iteration = 8.295187e-05 
-## iteration = 40 beta = 0.03240261 1.067195 -1.017125 1.128108 0 -1.073618 
-## Distance from last iteration = 3.896732e-06 
-## iteration = 50 beta = 0.0346749 1.056908 -1.010936 1.125084 0 -1.072799 
-## Distance from last iteration = 1.076438e-05 
-## iteration = 60 beta = 0.03256774 1.046976 -1.00047 1.115547 0 -1.062582 
-## Distance from last iteration = 7.940021e-06 
-## iteration = 70 beta = 0.02659178 1.046861 -1.000536 1.109275 0 -1.055039 
-## Distance from last iteration = 1.453078e-05 
-## iteration = 80 beta = 0.02337511 1.058919 -1.005586 1.108637 0 -1.054648 
-## Distance from last iteration = 5.774576e-06 
-## iteration = 90 beta = 0.02881635 1.068504 -1.012951 1.112225 0 -1.060291 
-## Distance from last iteration = 1.514593e-05 
-## iteration = 100 beta = 0.02948875 1.076905 -1.017599 1.114678 0 -1.062922 
-## Distance from last iteration = 4.426403e-06 
-## iteration = 110 beta = 0.02584919 1.08304 -1.020688 1.116973 0 -1.065361 
-## Distance from last iteration = 4.719359e-07 
-## iteration = 120 beta = 0.02857304 1.088741 -1.024188 1.116082 0 -1.064399 
-## Distance from last iteration = 2.546118e-06 
-## iteration = 130 beta = 0.02843074 1.090349 -1.023225 1.112404 0 -1.062091 
-## Distance from last iteration = 4.238248e-06 
-## iteration = 140 beta = 0.02703252 1.088101 -1.021314 1.111167 0 -1.061152 
-## Distance from last iteration = 6.07387e-06 
-## iteration = 150 beta = 0.02457677 1.085172 -1.020317 1.110807 0 -1.060302 
-## Distance from last iteration = 5.800769e-06</code></pre>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" data-line-number="1"><span class="kw">print</span>(list.saem.select<span class="op">$</span>subset_choose)</a></code></pre></div>
-<pre><code>## [1] 1 2 3 5</code></pre>
-<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb19-1" data-line-number="1"><span class="kw">print</span>(list.saem.select<span class="op">$</span>beta)</a></code></pre></div>
-<pre><code>## [1]  0.02480092  1.08537618 -1.02082832  1.11083772  0.00000000 -1.06022232</code></pre>
+<div id="model-selection-1" class="section level3">
+<h3>Model selection</h3>
+<p>To perform model selection with missing values, we adapt criterion BIC and step-wise method. The function <code>miss.glm.model.select</code> outputs the best model selected. With the current implementation, when <span class="math inline">\(p\)</span> is greater than 20, it may encounter computational difficulties for the BIC based model selection. In the following simulation, we add a null variable with missing values to check if the function can distinguish it from the true variables.</p>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1"></a><span class="co"># Add null variable with NA</span></span>
+<span id="cb44-2"><a href="#cb44-2"></a>X.null &lt;-<span class="st"> </span><span class="kw">mvrnorm</span>(n, <span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb44-3"><a href="#cb44-3"></a>patterns &lt;-<span class="st"> </span><span class="kw">runif</span>(n)<span class="op">&lt;</span><span class="fl">0.10</span> <span class="co"># missing completely at random</span></span>
+<span id="cb44-4"><a href="#cb44-4"></a>X.null[patterns] &lt;-<span class="st"> </span><span class="ot">NA</span></span>
+<span id="cb44-5"><a href="#cb44-5"></a>X.obs.null &lt;-<span class="st"> </span><span class="kw">cbind.data.frame</span>(X.obs, X.null)</span>
+<span id="cb44-6"><a href="#cb44-6"></a></span>
+<span id="cb44-7"><a href="#cb44-7"></a><span class="co"># Without model selection</span></span>
+<span id="cb44-8"><a href="#cb44-8"></a>df.obs.null =<span class="st"> </span><span class="kw">data.frame</span>(y, X.obs.null)</span>
+<span id="cb44-9"><a href="#cb44-9"></a>miss.list.null =<span class="st"> </span><span class="kw">miss.glm</span>(y<span class="op">~</span>., <span class="dt">data =</span> df.obs.null)</span></code></pre></div>
+<pre><code>## Iteration of SAEM: 
+## 50 100 150 200</code></pre>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1"></a><span class="kw">print</span>(miss.list.null)</span></code></pre></div>
+<pre><code>## 
+## Call:  miss.glm(formula = y ~ ., data = df.obs.null)
+## 
+## Coefficients:
+## (Intercept)           X1           X2           X3           X4           X5  
+##    -0.08280      1.52860     -1.29067      1.13314      1.05171     -1.09399  
+##      X.null  
+##     0.03964  
+## Standard error estimates:
+## (Intercept)           X1           X2           X3           X4           X5  
+##      0.3585       0.3514       0.2084       0.1417       0.1241       0.1291  
+##      X.null  
+##      0.1666  
+## Log-likelihood: -171.4</code></pre>
+<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1"></a><span class="co"># model selection for SAEM</span></span>
+<span id="cb48-2"><a href="#cb48-2"></a>miss.model =<span class="st"> </span><span class="kw">miss.glm.model.select</span>(y, X.obs.null)</span>
+<span id="cb48-3"><a href="#cb48-3"></a><span class="kw">print</span>(miss.model)</span></code></pre></div>
+<pre><code>## 
+## Call:  miss.glm(formula = Y ~ ., data = df, print_iter = FALSE, subsets = subset_choose)
+## 
+## Coefficients:
+## (Intercept)           X1           X2           X3           X4           X5  
+##    -0.06956      1.55837     -1.30913      1.14401      1.06008     -1.10143  
+## Standard error estimates:
+## (Intercept)           X1           X2           X3           X4           X5  
+##      0.3244       0.3500       0.2094       0.1440       0.1279       0.1317  
+## Log-likelihood: -172</code></pre>
 </div>
-<div id="prediction-on-test-set" class="section level2">
-<h2>Prediction on test set</h2>
-<p>In order to evaluate the prediction performance, we generate a test set of size <span class="math inline">\(Nt=100\)</span> times <span class="math inline">\(p=5\)</span> follow the same distribution as previous design matrix, and also with 10% of missing values. Given the real value of response according to the logistic regression model, we can evaluate the prediction results by a confusion matrix.</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb21-1" data-line-number="1"><span class="co"># Generate test set with missingness</span></a>
-<a class="sourceLine" id="cb21-2" data-line-number="2"><span class="kw">set.seed</span>(<span class="dv">200</span>)</a>
-<a class="sourceLine" id="cb21-3" data-line-number="3">Nt =<span class="st"> </span><span class="dv">100</span></a>
-<a class="sourceLine" id="cb21-4" data-line-number="4">X.test &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">rnorm</span>(Nt<span class="op">*</span>p), <span class="dt">nrow=</span>Nt)<span class="op">%*%</span><span class="kw">chol</span>(Sigma.star)<span class="op">+</span></a>
-<a class="sourceLine" id="cb21-5" data-line-number="5"><span class="st">          </span><span class="kw">matrix</span>(<span class="kw">rep</span>(mu.star,Nt), <span class="dt">nrow=</span>Nt, <span class="dt">byrow =</span> <span class="ot">TRUE</span>)</a>
-<a class="sourceLine" id="cb21-6" data-line-number="6"></a>
-<a class="sourceLine" id="cb21-7" data-line-number="7"><span class="co"># Real value for response of test set</span></a>
-<a class="sourceLine" id="cb21-8" data-line-number="8">p1 &lt;-<span class="st"> </span><span class="dv">1</span><span class="op">/</span>(<span class="dv">1</span><span class="op">+</span><span class="kw">exp</span>(<span class="op">-</span>X.test<span class="op">%*%</span>beta.star<span class="op">-</span>beta0.star))</a>
-<a class="sourceLine" id="cb21-9" data-line-number="9">y.test &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">runif</span>(Nt)<span class="op">&lt;</span>p1)</a>
-<a class="sourceLine" id="cb21-10" data-line-number="10"></a>
-<a class="sourceLine" id="cb21-11" data-line-number="11"><span class="co"># Generate missingness on test set</span></a>
-<a class="sourceLine" id="cb21-12" data-line-number="12">p.miss &lt;-<span class="st"> </span><span class="fl">0.10</span></a>
-<a class="sourceLine" id="cb21-13" data-line-number="13">X.test[<span class="kw">runif</span>(Nt<span class="op">*</span>p)<span class="op">&lt;</span>p.miss] &lt;-<span class="st"> </span><span class="ot">NA</span></a>
-<a class="sourceLine" id="cb21-14" data-line-number="14"></a>
-<a class="sourceLine" id="cb21-15" data-line-number="15"><span class="co"># Prediction on test set</span></a>
-<a class="sourceLine" id="cb21-16" data-line-number="16">pr.saem &lt;-<span class="st"> </span><span class="kw">pred_saem</span>(X.test, list.saem.select<span class="op">$</span>beta, </a>
-<a class="sourceLine" id="cb21-17" data-line-number="17">                     list.saem.select<span class="op">$</span>mu, list.saem.select<span class="op">$</span>sig2)</a>
-<a class="sourceLine" id="cb21-18" data-line-number="18"></a>
-<a class="sourceLine" id="cb21-19" data-line-number="19"><span class="co"># Confusion matrix</span></a>
-<a class="sourceLine" id="cb21-20" data-line-number="20">pred.saem =<span class="st"> </span>(pr.saem<span class="op">&gt;</span><span class="fl">0.5</span>)<span class="op">*</span><span class="dv">1</span></a>
-<a class="sourceLine" id="cb21-21" data-line-number="21"><span class="kw">table</span>(y.test,pred.saem )</a></code></pre></div>
+<div id="prediction-on-test-set-1" class="section level3">
+<h3>Prediction on test set</h3>
+<p>In order to evaluate the prediction performance, we generate a test set of size <span class="math inline">\(nt = 100\)</span> times <span class="math inline">\(p = 5\)</span> following the same distribution as the design matrix, and without and with 10% of missing values. We evaluate the prediction quality with a confusion matrix.</p>
+<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1"></a><span class="co"># Generate test set with missingness</span></span>
+<span id="cb50-2"><a href="#cb50-2"></a><span class="kw">set.seed</span>(<span class="dv">200</span>)</span>
+<span id="cb50-3"><a href="#cb50-3"></a>nt =<span class="st"> </span><span class="dv">100</span></span>
+<span id="cb50-4"><a href="#cb50-4"></a>X.test &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">rnorm</span>(nt<span class="op">*</span>p), <span class="dt">nrow=</span>nt)<span class="op">%*%</span><span class="kw">chol</span>(Sigma.star)<span class="op">+</span></span>
+<span id="cb50-5"><a href="#cb50-5"></a><span class="st">          </span><span class="kw">matrix</span>(<span class="kw">rep</span>(mu.star,nt), <span class="dt">nrow =</span> nt, <span class="dt">byrow =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb50-6"><a href="#cb50-6"></a></span>
+<span id="cb50-7"><a href="#cb50-7"></a><span class="co"># Generate the test set</span></span>
+<span id="cb50-8"><a href="#cb50-8"></a>p1 &lt;-<span class="st"> </span><span class="dv">1</span><span class="op">/</span>(<span class="dv">1</span><span class="op">+</span><span class="kw">exp</span>(<span class="op">-</span>X.test<span class="op">%*%</span>beta.star<span class="op">-</span>beta0.star))</span>
+<span id="cb50-9"><a href="#cb50-9"></a>y.test &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">runif</span>(nt)<span class="op">&lt;</span>p1)</span>
+<span id="cb50-10"><a href="#cb50-10"></a></span>
+<span id="cb50-11"><a href="#cb50-11"></a><span class="co"># Generate missingness on test set</span></span>
+<span id="cb50-12"><a href="#cb50-12"></a>p.miss &lt;-<span class="st"> </span><span class="fl">0.10</span></span>
+<span id="cb50-13"><a href="#cb50-13"></a>X.test[<span class="kw">runif</span>(nt<span class="op">*</span>p)<span class="op">&lt;</span>p.miss] &lt;-<span class="st"> </span><span class="ot">NA</span></span>
+<span id="cb50-14"><a href="#cb50-14"></a></span>
+<span id="cb50-15"><a href="#cb50-15"></a><span class="co"># Prediction on test set</span></span>
+<span id="cb50-16"><a href="#cb50-16"></a>pr.saem &lt;-<span class="st"> </span><span class="kw">predict</span>(miss.list, <span class="kw">data.frame</span>(X.test))</span>
+<span id="cb50-17"><a href="#cb50-17"></a></span>
+<span id="cb50-18"><a href="#cb50-18"></a><span class="co"># Confusion matrix</span></span>
+<span id="cb50-19"><a href="#cb50-19"></a>pred.saem =<span class="st"> </span>(pr.saem<span class="op">&gt;</span><span class="fl">0.5</span>)<span class="op">*</span><span class="dv">1</span></span>
+<span id="cb50-20"><a href="#cb50-20"></a><span class="kw">table</span>(y.test,pred.saem )</span></code></pre></div>
 <pre><code>##       pred.saem
 ## y.test  0  1
-##      0 66  7
-##      1  8 19</code></pre>
+##      0 34  8
+##      1  6 52</code></pre>
+</div>
 </div>
 <div id="reference" class="section level2">
 <h2>Reference</h2>
-<p>Logistic Regression with Missing Covariates – Parameter Estimation, Model Selection and Prediction (2018, Jiang W., Josse J., Lavielle M., Traumabase Group), <a href="https://arxiv.org/abs/1805.04602">arXiv:1805.04602</a>.</p>
+<p>Logistic Regression with Missing Covariates – Parameter Estimation, Model Selection and Prediction (2020, Jiang W., Josse J., Lavielle M., TraumaBase Group), <a href="https://doi.org/10.1016/j.csda.2019.106907">Computational Statistics &amp; Data Analysis</a>.</p>
 </div>
 
+
+
+<!-- code folding -->
 
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
