@@ -12,23 +12,10 @@
 
 <meta name="author" content="Wei Jiang" />
 
-<meta name="date" content="2020-07-05" />
+<meta name="date" content="2021-04-09" />
 
 <title>Linear regression and logistic regression with missing covariates</title>
 
-<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
-// be compatible with the behavior of Pandoc < 2.8).
-document.addEventListener('DOMContentLoaded', function(e) {
-  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
-  var i, h, a;
-  for (i = 0; i < hs.length; i++) {
-    h = hs[i];
-    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
-    a = h.attributes;
-    while (a.length > 0) h.removeAttribute(a[0].name);
-  }
-});
-</script>
 <script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
 // v0.0.1
 // Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
@@ -46,21 +33,31 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css" data-origin="pandoc">
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
 @media screen {
 div.sourceCode { overflow: auto; }
 }
 @media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -80,7 +77,7 @@ pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-le
 div.sourceCode
   {   }
 @media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
@@ -134,6 +131,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   }
 })();
 </script>
+
 
 
 
@@ -331,7 +329,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Linear regression and logistic regression with missing covariates</h1>
 <h4 class="author">Wei Jiang</h4>
-<h4 class="date">2020-07-05</h4>
+<h4 class="date">2021-04-09</h4>
 
 
 
@@ -476,18 +474,18 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <span id="cb21-8"><a href="#cb21-8"></a>df.obs.null =<span class="st"> </span><span class="kw">data.frame</span>(y, X.obs.null)</span>
 <span id="cb21-9"><a href="#cb21-9"></a>miss.list.null =<span class="st"> </span><span class="kw">miss.lm</span>(y<span class="op">~</span>., <span class="dt">data =</span> df.obs.null)</span></code></pre></div>
 <pre><code>## Iterations of EM: 
-## 1...2...3...4...5...6...7...8...9...10...11...12...13...14...15...</code></pre>
+## 1...2...3...4...5...6...7...8...9...10...11...12...13...14...15...16...17...18...19...20...</code></pre>
 <div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a><span class="kw">print</span>(miss.list.null)</span></code></pre></div>
 <pre><code>## 
 ## Call:  miss.lm(formula = y ~ ., data = df.obs.null)
 ## 
 ## Coefficients:
 ## (Intercept)           X1           X2       X.null  
-##     1.88617      3.05883     -1.00391      0.04435  
+##     1.89134      3.05640     -1.00446      0.04426  
 ## Standard error estimates:
 ## (Intercept)           X1           X2       X.null  
-##     0.05670      0.03438      0.02125      0.02853  
-## Log-likelihood: 15.87</code></pre>
+##     0.05212      0.03362      0.01853      0.02713  
+## Log-likelihood: 10.2</code></pre>
 <div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1"></a><span class="co"># Model selection</span></span>
 <span id="cb25-2"><a href="#cb25-2"></a>miss.model =<span class="st"> </span><span class="kw">miss.lm.model.select</span>(y, X.obs.null)</span>
 <span id="cb25-3"><a href="#cb25-3"></a><span class="kw">print</span>(miss.model)</span></code></pre></div>

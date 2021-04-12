@@ -1,13 +1,13 @@
 # Predict Method for miss.lm Fits
 #'
-#' Prediction on test with missing values for the logistic regression model.
+#' Prediction on test with missing values for the linear regression model.
 #' @param object a fitted object of class inheriting from "miss.lm".
 #' @param newdata a data frame in which to look for variables with which to predict. It can contain missing values.
 #' @param seed  An integer as a seed set for the random generator.
 #' @param ... Further arguments passed to or from other methods.
 #' @return
 #' \item{pr.y}{The prediction result for linear regression.}
-#' @import norm MASS mice
+#' @import norm MASS
 #' @importFrom methods is
 #' @examples
 #'
